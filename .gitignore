@@ -17,4 +17,4 @@ tags
 [._]*.un~
 
 # Svg files
-.svg
+*.svg
