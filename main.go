@@ -5,18 +5,21 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"strconv"
+	"strings"
 
 	svg "github.com/ajstarks/svgo"
 )
 
 var (
-	outname, unit, dimensions string
-	report, output            bool
+	outname, unit, dimensions, bigbox string
+	report, output                    bool
 )
 
 func initFlag() {
 	flag.StringVar(&outname, "o", "fit", "name of the maching project")
 	flag.StringVar(&unit, "u", "mm", "unit of measurements")
+	flag.StringVar(&bigbox, "b", "0x0", "dimensions as \"wxh\" in units")
 	flag.BoolVar(&report, "r", true, "match report")
 	flag.BoolVar(&output, "f", false, "outputing files representing matching")
 
@@ -28,15 +31,26 @@ func main() {
 	dimensions := flag.Args()
 
 	dims := dimString(dimensions)
+
 	unfit := blocksArranged(dims)
 	fit := []*Node{}
 
-	width := 2030
-	height := 3050
+	wh := strings.Split(bigbox, "x")
+	width, err := strconv.Atoi(wh[0])
+	if err != nil {
+		panic("can't get width")
+	}
+	height, err := strconv.Atoi(wh[1])
+	if err != nil {
+		panic("can't get height")
+	}
+
 	var canvas *svg.SVG
 	unfitlen := len(unfit)
 	inx := 0
 	stats := ""
+	mpused := 0.0
+	mplost := 0.0
 	for unfitlen > 0 {
 		inx++
 		fit, unfit = pack(width, height, unfit)
@@ -46,6 +60,7 @@ func main() {
 			if err != nil {
 				panic("cannot create file")
 			}
+
 			canvas = svg.New(f)
 			canvas.Startunit(width, height, unit, fmt.Sprintf("viewBox=\"0 0 %d %d\"", width, height))
 			outsvg(canvas, fit)
@@ -67,6 +82,16 @@ func main() {
 				len(fit),
 				percent,
 			)
+			k := 1.0
+			switch unit {
+			case "mm":
+				k = 1000 * 1000
+			case "cm":
+				k = 100 * 100
+			}
+			used := float64(aria) / k
+			mpused += used
+			mplost += float64(width*height)/k - used
 		}
 
 		if unfitlen == len(unfit) {
@@ -76,6 +101,7 @@ func main() {
 	}
 
 	if report {
+		stats += fmt.Sprintf("used %.2f lost %.2f\n", mpused, mplost)
 		fmt.Print(stats)
 	}
 }
