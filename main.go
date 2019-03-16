@@ -14,6 +14,7 @@ import (
 var (
 	outname, unit, dimensions, bigbox string
 	report, output, tight             bool
+	mu, ml, pp, pd                    float64
 )
 
 func initFlag() {
@@ -23,6 +24,10 @@ func initFlag() {
 	flag.BoolVar(&report, "r", true, "match report")
 	flag.BoolVar(&output, "f", false, "outputing files representing matching")
 	flag.BoolVar(&tight, "tight", false, "when true only aria used is taken into account")
+	flag.Float64Var(&mu, "mu", 15.0, "used material price per 1 square meter")
+	flag.Float64Var(&ml, "ml", 5.0, "lost material price per 1 square meter")
+	flag.Float64Var(&pp, "pp", 0.25, "perimeter price per 1 linear meter; used for evaluating cuts price")
+	flag.Float64Var(&pd, "pd", 10, "travel price to location")
 
 	flag.Parse()
 }
@@ -125,7 +130,8 @@ func main() {
 	}
 
 	if report {
-		stats += fmt.Sprintf("used %.2f lost %.2f perim %.2f\n", mpused, mplost, mperim)
+		price := mpused*mu + mplost*ml + mperim*pp + pd
+		stats += fmt.Sprintf("used %.2f lost %.2f total %.2f perim %.2f price %.2f\n", mpused, mplost, mpused+mplost, mperim, price)
 		fmt.Print(stats)
 	}
 }
