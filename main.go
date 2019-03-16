@@ -54,6 +54,7 @@ func main() {
 	stats := ""
 	mpused := 0.0
 	mplost := 0.0
+	mperim := 0.0
 	for unfitlen > 0 {
 		inx++
 		fit, unfit = pack(width, initialheight, unfit)
@@ -81,30 +82,40 @@ func main() {
 		}
 
 		if report {
-			aria := 0
+			aria, perim := 0, 0.0
 			for _, blk := range fit {
 				aria += blk.w * blk.h
+				perim += 2 * float64(blk.w+blk.h)
 			}
 			percent := math.Round(100 * float64(aria) / float64(width*height))
+			k := 1.0
+			kp := 1.0
+			switch unit {
+			case "mm":
+				k = 1000 * 1000
+				kp = 1000
+			case "cm":
+				k = 100 * 100
+				kp = 100
+			}
+			used := float64(aria) / k
+			lost := float64(width*height)/k - used
+			perim = perim / kp
+			mplost += lost
+			mpused += used
+			mperim += perim
 			stats += fmt.Sprintf(
-				"%d %s %d%sx%d%s fit %d percent %.2f\n",
+				"%d %s %d%sx%d%s fit %d used %.2f lost %.2f percent %.2f perim %.2f\n",
 				inx,
 				outname,
 				width, unit,
 				height, unit,
 				len(fit),
+				used,
+				lost,
 				percent,
+				perim,
 			)
-			k := 1.0
-			switch unit {
-			case "mm":
-				k = 1000 * 1000
-			case "cm":
-				k = 100 * 100
-			}
-			used := float64(aria) / k
-			mpused += used
-			mplost += float64(width*height)/k - used
 		}
 
 		if unfitlen == len(unfit) {
@@ -114,7 +125,7 @@ func main() {
 	}
 
 	if report {
-		stats += fmt.Sprintf("used %.2f lost %.2f\n", mpused, mplost)
+		stats += fmt.Sprintf("used %.2f lost %.2f perim %.2f\n", mpused, mplost, mperim)
 		fmt.Print(stats)
 	}
 }
