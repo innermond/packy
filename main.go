@@ -13,7 +13,7 @@ import (
 
 var (
 	outname, unit, dimensions, bigbox string
-	report, output                    bool
+	report, output, tight             bool
 )
 
 func initFlag() {
@@ -22,6 +22,7 @@ func initFlag() {
 	flag.StringVar(&bigbox, "b", "0x0", "dimensions as \"wxh\" in units")
 	flag.BoolVar(&report, "r", true, "match report")
 	flag.BoolVar(&output, "f", false, "outputing files representing matching")
+	flag.BoolVar(&tight, "tight", false, "when true only aria used is taken into account")
 
 	flag.Parse()
 }
@@ -45,6 +46,8 @@ func main() {
 		panic("can't get height")
 	}
 
+	initialheight := height
+
 	var canvas *svg.SVG
 	unfitlen := len(unfit)
 	inx := 0
@@ -53,7 +56,17 @@ func main() {
 	mplost := 0.0
 	for unfitlen > 0 {
 		inx++
-		fit, unfit = pack(width, height, unfit)
+		fit, unfit = pack(width, initialheight, unfit)
+
+		if tight {
+			h := 0
+			for _, blk := range fit {
+				if h < blk.fit.y+blk.h {
+					h = blk.fit.y + blk.h
+				}
+			}
+			height = h
+		}
 
 		if output {
 			f, err := os.Create(fmt.Sprintf("%s.%d.svg", outname, inx))

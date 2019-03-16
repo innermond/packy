@@ -46,7 +46,8 @@ func outsvg(canvas *svg.SVG, blocks []*Node) error {
 	canvas.Group("id=\"dimensions\"", "inkscape:label=\"dimensions\"", "inkscape:groupmode=\"layer\"")
 	for _, blk := range blocks {
 		if blk.fit != nil {
-			canvas.Text(blk.fit.x+blk.w/2, blk.fit.y+blk.h/2, fmt.Sprintf("%dx%d", blk.w, blk.h), "text-anchor:middle;font-size:72pt;fill:#000")
+			canvas.Text(blk.fit.x+blk.w/2, blk.fit.y+blk.h/2,
+				fmt.Sprintf("%dx%d", blk.w, blk.h), "text-anchor:middle;font-size:72pt;fill:#000")
 		} else {
 			return errors.New("unexpected unfit block")
 		}
