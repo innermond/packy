@@ -24,8 +24,8 @@ func (pk *Packer) findNode(root *Node, w, h int) *Node {
 
 func (pk *Packer) splitNode(node *Node, w, h int) *Node {
 	node.used = true
-	node.down = &Node.X: node.X, y: node.y + h, w: node.w, h: node.h - h}
-	node.right = &Node.X: node.X + w, y: node.y, w: node.w - w, h: h}
+	node.down = &Node{x: node.x, y: node.y + h, w: node.w, h: node.h - h}
+	node.right = &Node{x: node.x + w, y: node.y, w: node.w - w, h: h}
 
 	return node
 }
