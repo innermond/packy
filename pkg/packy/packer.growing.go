@@ -1,10 +1,4 @@
-package main
-
-type Node struct {
-	x, y, w, h       int
-	used             bool
-	right, down, fit *Node
-}
+package packy
 
 type GrowingPacker struct {
 	root *Node
