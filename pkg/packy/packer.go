@@ -40,7 +40,7 @@ func (pk *Packer) Fit(blocks []*Node) {
 		block = blocks[n]
 		node := pk.findNode(pk.root, block.W, block.H)
 		if node != nil {
-			block.fit = pk.splitNode(node, block.W, block.H)
+			block.Fit = pk.splitNode(node, block.W, block.H)
 		}
 		n++
 	}

@@ -10,7 +10,7 @@ func Pack(width int, height int, blocks []*Node) (fit []*Node, unfit []*Node) {
 	packer.Fit(blocks)
 
 	for _, blk := range blocks {
-		if blk.fit != nil {
+		if blk.Fit != nil {
 			fit = append(fit, blk)
 		} else {
 			unfit = append(unfit, blk)

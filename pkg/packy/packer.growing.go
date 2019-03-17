@@ -24,9 +24,9 @@ func (gp *GrowingPacker) Fit(blocks []*Node) {
 		block = blocks[n]
 		node := gp.findNode(gp.root, block.W, block.H)
 		if node != nil {
-			block.fit = gp.splitNode(node, block.W, block.H)
+			block.Fit = gp.splitNode(node, block.W, block.H)
 		} else {
-			block.fit = gp.growNode(block.W, block.H)
+			block.Fit = gp.growNode(block.W, block.H)
 		}
 		n++
 	}
@@ -48,8 +48,8 @@ func (gp *GrowingPacker) findNode(root *Node, w, h int) *Node {
 
 func (gp *GrowingPacker) splitNode(node *Node, w, h int) *Node {
 	node.used = true
-	node.down = &Node{x: node.x, Y: node.Y + h, W: node.W, H: node.H - h}
-	node.right = &Node{x: node.x + w, Y: node.Y, W: node.W - w, H: h}
+	node.down = &Node{X: node.X, Y: node.Y + h, W: node.W, H: node.H - h}
+	node.right = &Node{X: node.X + w, Y: node.Y, W: node.W - w, H: h}
 
 	return node
 }
@@ -76,12 +76,12 @@ func (gp *GrowingPacker) growNode(w, h int) *Node {
 func (gp GrowingPacker) growRight(w, h int) *Node {
 	gp.root = &Node{
 		used:  true,
-		x:     0,
+		X:     0,
 		Y:     0,
 		W:     gp.root.W + w,
 		H:     gp.root.H,
 		down:  gp.root,
-		right: &Node{x: gp.root.W, Y: 0, W: w, H: gp.root.H},
+		right: &Node{X: gp.root.W, Y: 0, W: w, H: gp.root.H},
 	}
 	node := gp.findNode(gp.root, w, h)
 	if node != nil {
@@ -93,11 +93,11 @@ func (gp GrowingPacker) growRight(w, h int) *Node {
 func (gp GrowingPacker) growDown(w, h int) *Node {
 	gp.root = &Node{
 		used:  true,
-		x:     0,
+		X:     0,
 		Y:     0,
 		W:     gp.root.W,
 		H:     gp.root.H + h,
-		down:  &Node{x: 0, Y: gp.root.H, W: gp.root.W, H: h},
+		down:  &Node{X: 0, Y: gp.root.H, W: gp.root.W, H: h},
 		right: gp.root,
 	}
 	node := gp.findNode(gp.root, w, h)

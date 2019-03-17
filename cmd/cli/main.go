@@ -68,10 +68,8 @@ func main() {
 		if tight {
 			h := 0
 			for _, blk := range fit {
-				bf := blk.FitDim()
-				bd := blk.Dim()
-				if h < bf.Y+bd.H {
-					h = bf.Y + bd.H
+				if h < blk.Fit.Y+blk.H {
+					h = blk.Fit.Y + blk.H
 				}
 			}
 			height = h
@@ -92,9 +90,8 @@ func main() {
 		if report {
 			aria, perim := 0, 0.0
 			for _, blk := range fit {
-				bd := blk.Dim()
-				aria += bd.W * bd.H
-				perim += 2 * float64(bd.W+bd.H)
+				aria += blk.W * blk.H
+				perim += 2 * float64(blk.W+blk.H)
 			}
 			percent := math.Round(100 * float64(aria) / float64(width*height))
 			k := 1.0
