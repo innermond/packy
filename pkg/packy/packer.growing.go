@@ -12,21 +12,21 @@ func (gp *GrowingPacker) Fit(blocks []*Node) {
 	)
 
 	if l > 0 {
-		w = blocks[0].w
+		w = blocks[0].W
 	}
 	if l > 0 {
-		h = blocks[0].h
+		h = blocks[0].H
 	}
 
-	gp.root = &Node{w: w, h: h}
+	gp.root = &Node{W: w, H: h}
 
 	for n < l {
 		block = blocks[n]
-		node := gp.findNode(gp.root, block.w, block.h)
+		node := gp.findNode(gp.root, block.W, block.H)
 		if node != nil {
-			block.fit = gp.splitNode(node, block.w, block.h)
+			block.fit = gp.splitNode(node, block.W, block.H)
 		} else {
-			block.fit = gp.growNode(block.w, block.h)
+			block.fit = gp.growNode(block.W, block.H)
 		}
 		n++
 	}
@@ -39,7 +39,7 @@ func (gp *GrowingPacker) findNode(root *Node, w, h int) *Node {
 		if node == nil {
 			node = gp.findNode(root.down, w, h)
 		}
-	} else if w <= root.w && h <= root.h {
+	} else if w <= root.W && h <= root.H {
 		node = root
 	}
 
@@ -48,18 +48,18 @@ func (gp *GrowingPacker) findNode(root *Node, w, h int) *Node {
 
 func (gp *GrowingPacker) splitNode(node *Node, w, h int) *Node {
 	node.used = true
-	node.down = &Node{x: node.x, y: node.y + h, w: node.w, h: node.h - h}
-	node.right = &Node{x: node.x + w, y: node.y, w: node.w - w, h: h}
+	node.down = &Node{x: node.x, Y: node.Y + h, W: node.W, H: node.H - h}
+	node.right = &Node{x: node.x + w, Y: node.Y, W: node.W - w, H: h}
 
 	return node
 }
 
 func (gp *GrowingPacker) growNode(w, h int) *Node {
-	canGrowDown := w <= gp.root.w
-	canGrowRight := h <= gp.root.h
+	canGrowDown := w <= gp.root.W
+	canGrowRight := h <= gp.root.H
 
-	shouldGrowRight := canGrowRight && gp.root.h >= gp.root.w+w // attempt to keep square-ish by growing right when height is much greater than width
-	shouldGrowDown := canGrowDown && gp.root.w >= gp.root.h+h   // attempt to keep square-ish by growing down  when width  is much greater than height
+	shouldGrowRight := canGrowRight && gp.root.H >= gp.root.W+w // attempt to keep square-ish by growing right when height is much greater than width
+	shouldGrowDown := canGrowDown && gp.root.W >= gp.root.H+h   // attempt to keep square-ish by growing down  when width  is much greater than height
 
 	if shouldGrowRight {
 		return gp.growRight(w, h)
@@ -77,11 +77,11 @@ func (gp GrowingPacker) growRight(w, h int) *Node {
 	gp.root = &Node{
 		used:  true,
 		x:     0,
-		y:     0,
-		w:     gp.root.w + w,
-		h:     gp.root.h,
+		Y:     0,
+		W:     gp.root.W + w,
+		H:     gp.root.H,
 		down:  gp.root,
-		right: &Node{x: gp.root.w, y: 0, w: w, h: gp.root.h},
+		right: &Node{x: gp.root.W, Y: 0, W: w, H: gp.root.H},
 	}
 	node := gp.findNode(gp.root, w, h)
 	if node != nil {
@@ -94,10 +94,10 @@ func (gp GrowingPacker) growDown(w, h int) *Node {
 	gp.root = &Node{
 		used:  true,
 		x:     0,
-		y:     0,
-		w:     gp.root.w,
-		h:     gp.root.h + h,
-		down:  &Node{x: 0, y: gp.root.h, w: gp.root.w, h: h},
+		Y:     0,
+		W:     gp.root.W,
+		H:     gp.root.H + h,
+		down:  &Node{x: 0, Y: gp.root.H, W: gp.root.W, H: h},
 		right: gp.root,
 	}
 	node := gp.findNode(gp.root, w, h)

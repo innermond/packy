@@ -15,7 +15,7 @@ func (pk *Packer) findNode(root *Node, w, h int) *Node {
 		if node == nil {
 			node = pk.findNode(root.down, w, h)
 		}
-	} else if w <= root.w && h <= root.h {
+	} else if w <= root.W && h <= root.H {
 		node = root
 	}
 
@@ -24,8 +24,8 @@ func (pk *Packer) findNode(root *Node, w, h int) *Node {
 
 func (pk *Packer) splitNode(node *Node, w, h int) *Node {
 	node.used = true
-	node.down = &Node{x: node.x, y: node.y + h, w: node.w, h: node.h - h}
-	node.right = &Node{x: node.x + w, y: node.y, w: node.w - w, h: h}
+	node.down = &Node{X: node.X, Y: node.Y + h, W: node.W, H: node.H - h}
+	node.right = &Node{X: node.X + w, Y: node.Y, W: node.W - w, H: h}
 
 	return node
 }
@@ -38,9 +38,9 @@ func (pk *Packer) Fit(blocks []*Node) {
 
 	for n < len(blocks) {
 		block = blocks[n]
-		node := pk.findNode(pk.root, block.w, block.h)
+		node := pk.findNode(pk.root, block.W, block.H)
 		if node != nil {
-			block.fit = pk.splitNode(node, block.w, block.h)
+			block.fit = pk.splitNode(node, block.W, block.H)
 		}
 		n++
 	}

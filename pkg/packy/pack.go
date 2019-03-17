@@ -29,10 +29,10 @@ func Arrange(bb []*Node) {
 	sort.Slice(bb, func(i, j int) bool {
 		a := bb[i]
 		b := bb[j]
-		aw := float64(a.w)
-		ah := float64(a.h)
-		bw := float64(b.w)
-		bh := float64(b.h)
+		aw := float64(a.W)
+		ah := float64(a.H)
+		bw := float64(b.W)
+		bh := float64(b.H)
 
 		if math.Max(bw, bh) <= math.Max(aw, ah) {
 			return true
