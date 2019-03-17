@@ -15,7 +15,7 @@ type dim struct {
 func blocksfrom(dims []dim) (blocks []*packy.Node) {
 	for inx := 0; inx < len(dims); inx++ {
 		for i := 0; i < dims[inx].n; i++ {
-			blocks = append(blocks, packy.NewBlock(int(dims[inx].w), int(dims[inx].h)))
+			blocks = append(blocks, &packy.Node{W: int(dims[inx].w), H: int(dims[inx].h)})
 		}
 	}
 	return
