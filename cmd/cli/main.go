@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	outname, unit, dimensions, bigbox       string
-	report, output, tight, expandtocutwidth bool
-	mu, ml, pp, pd, cutwidth                float64
+	outname, unit, dimensions, bigbox                   string
+	report, output, tight, supertight, expandtocutwidth bool
+	mu, ml, pp, pd, cutwidth                            float64
 )
 
 func param() {
@@ -23,7 +23,8 @@ func param() {
 	flag.StringVar(&bigbox, "bb", "0x0", "dimensions as \"wxh\" in units for bigest box / mother surface")
 	flag.BoolVar(&report, "r", true, "match report")
 	flag.BoolVar(&output, "f", false, "outputing files representing matching")
-	flag.BoolVar(&tight, "tight", false, "when true only aria used is taken into account")
+	flag.BoolVar(&tight, "tight", false, "when true only aria used tighten by height is taken into account")
+	flag.BoolVar(&supertight, "supertight", false, "when true only aria used tighten bu height and width is taken into account")
 	flag.Float64Var(&mu, "mu", 15.0, "used material price per 1 square meter")
 	flag.Float64Var(&ml, "ml", 5.0, "lost material price per 1 square meter")
 	flag.Float64Var(&pp, "pp", 0.25, "perimeter price per 1 linear meter; used for evaluating cuts price")
@@ -75,8 +76,8 @@ func main() {
 
 	for unfitlen > 0 {
 		inx++
-
-		fit, unfit = packy.Pack(width, initialheight, unfit)
+		// Presumably unfit are already expanded
+		fit, unfit = packy.PackExpand(width, initialheight, unfit, expand)
 
 		// How much the boxes are spreading on page. Are they dangerously approaching to edges
 		xh := 0.0
@@ -98,17 +99,12 @@ func main() {
 			}
 			prevx = blk.Fit.X
 			prevy = blk.Fit.Y
-			if cwx*cutwidth+xw >= width {
-				fmt.Printf("for cut width %.2f big box width %f is not enough", cutwidth, width)
-				continue
-			}
-			if cwy*cutwidth+xh >= height {
-				fmt.Printf("for cut width %.2f big box height %f is not enough", cutwidth, height)
-				continue
-			}
 		}
 
-		if tight {
+		if supertight {
+			height = xh
+			width = xw
+		} else if tight {
 			height = xh
 		}
 
@@ -123,7 +119,7 @@ func main() {
 			height -= expand
 
 			s := svgStart(width, height, unit)
-			si, err := outsvg(fit, expand)
+			si, err := outsvg(fit)
 			if err != nil {
 				panic(err)
 			}
@@ -136,7 +132,6 @@ func main() {
 		}
 
 		if report {
-			// TODO: fit boxes here are expanded, fix it
 			aria, perim := 0.0, 0.0
 			for _, blk := range fit {
 				aria += blk.W * blk.H

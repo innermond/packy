@@ -8,33 +8,56 @@ import (
 	"github.com/innermond/cobai/packy/pkg/packy"
 )
 
-func aproximateHeightText(numchar int, w float64) string {
+func aproximateHeightText(numchar int, w float64) float64 {
 	wchar := w / float64(numchar+2)
-	hchar := math.Floor(1.5*wchar*100.0) / 100
-	return fmt.Sprintf("%.2f", hchar)
+	return math.Floor(1.5*wchar*100.0) / 100
 }
 
-func outsvg(blocks []*packy.Node, expand float64) (string, error) {
-	gb := svgGroupStart("id=\"blocks\"", "inkscape:label=\"blocks\"", "inkscape:groupmode=\"layer\"")
-	for _, blk := range blocks {
-		if blk.Fit != nil {
-			// first row and first column must be shrink by expand
-			prevx, prevy := 0.0, 0.0
-			if blk.Fit.Y != prevy || blk.Fit.X != prevx {
-				gb += svgRect(blk.Fit.X-expand,
-					blk.Fit.Y,
-					blk.W-expand,
-					blk.H-expand,
-					"fill:none;stroke-width:0.2;stroke-opacity:1;stroke:green")
-			} else {
-				gb += svgRect(blk.Fit.X,
-					blk.Fit.Y,
-					blk.W-expand,
-					blk.H-expand,
-					"fill:none;stroke-width:0.2;stroke-opacity:1;stroke:red")
+func outsvg(blocks []*packy.Node) (string, error) {
+	if len(blocks) == 0 || blocks == nil {
+		return "", errors.New("no blocks")
+	}
 
+	gb := svgGroupStart("id=\"blocks\"", "inkscape:label=\"blocks\"", "inkscape:groupmode=\"layer\"")
+
+	// first block
+	blk := blocks[0]
+	gb += svgRect(0.0,
+		0.0,
+		blk.W,
+		blk.H,
+		"fill:magenta;stroke:none",
+	)
+
+	for _, blk := range blocks[1:] {
+		if blk.Fit != nil {
+			// blocks on the top edge must be shortened on height by a expand = half cutwidth
+			if blk.Fit.Y == 0.0 {
+				gb += svgRect(blk.Fit.X,
+					0.0,
+					blk.W,
+					blk.H,
+					"fill:red;stroke:none",
+				)
+				continue
 			}
-			prevx, prevy = blk.Fit.X, blk.Fit.Y
+			// blocks on the left edge must be shortened on width by a expand = half cutwidth
+			if blk.Fit.X == 0.0 {
+				gb += svgRect(0.0,
+					blk.Fit.Y,
+					blk.W,
+					blk.H,
+					"fill:green;stroke:none",
+				)
+				continue
+			}
+			// blocks that do not touch any big box edges keeps their expanded dimensions
+			gb += svgRect(blk.Fit.X,
+				blk.Fit.Y,
+				blk.W,
+				blk.H,
+				"fill:#eee;stroke:none",
+			)
 		} else {
 			return "", errors.New("unexpected unfit block")
 		}
@@ -45,8 +68,9 @@ func outsvg(blocks []*packy.Node, expand float64) (string, error) {
 	for _, blk := range blocks {
 		if blk.Fit != nil {
 			x := fmt.Sprintf("%.2fx%.2f", blk.W, blk.H)
-			gt += svgText(blk.Fit.X+blk.W/2, blk.Fit.Y+blk.H/2,
-				x, "text-anchor:middle;font-size:"+aproximateHeightText(len(x), blk.W)+";fill:#000")
+			y := aproximateHeightText(len(x), blk.W)
+			gt += svgText(blk.Fit.X+blk.W/2, blk.Fit.Y+blk.H/2+y/3, // y/3 is totally empirical
+				x, "text-anchor:middle;font-size:"+fmt.Sprintf("%.2f", y)+";fill:#000")
 		} else {
 			return "", errors.New("unexpected unfit block")
 		}
