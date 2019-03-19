@@ -41,6 +41,10 @@ func main() {
 	// if the cut can eat half of its width along cutline
 	// we compensate expanding boxes with an entire cut width
 	dims := dimString(dimensions, cutwidth)
+	lendims := 0
+	for _, dim := range dims {
+		lendims += dim.n
+	}
 
 	unfit := blocksArranged(dims)
 	fit := []*packy.Node{}
@@ -79,7 +83,11 @@ func main() {
 		// Presumably unfit are already expanded
 		fit, unfit = packy.PackExpand(width, initialheight, unfit, expand)
 
-		// How much the boxes are spreading on page. Are they dangerously approaching to edges
+		if len(fit) == 0 {
+			break
+		}
+
+		// calculate calculate de maximum height and width that fit blocks have
 		xh := 0.0
 		xw := 0.0
 		cwx, cwy := 0.0, 0.0
@@ -108,9 +116,11 @@ func main() {
 			height = xh
 		}
 
-		if output && len(fit) > 0 {
-			f, err := os.Create(fmt.Sprintf("%s.%d.svg", outname, inx))
-			defer f.Close()
+		// output only when we have fit blocks
+		if output {
+			fn := fmt.Sprintf("%s.%d.svg", outname, inx)
+
+			f, err := os.Create(fn)
 			if err != nil {
 				panic("cannot create file")
 			}
@@ -122,13 +132,16 @@ func main() {
 			s := svgStart(width, height, unit)
 			si, err := outsvg(fit)
 			if err != nil {
-				break
-			}
-			s += svgEnd(si)
+				f.Close()
+				os.Remove(fn)
+			} else {
+				s += svgEnd(si)
 
-			_, err = f.WriteString(s)
-			if err != nil {
-				panic(err)
+				_, err = f.WriteString(s)
+				if err != nil {
+					panic(err)
+				}
+				f.Close()
 			}
 		}
 
@@ -166,8 +179,8 @@ func main() {
 				width, unit,
 				height, unit,
 				len(fit),
-				len(dims),
-				len(dims)-len(fit),
+				unfitlen,
+				unfitlen-len(fit),
 				used,
 				lost,
 				percent,
