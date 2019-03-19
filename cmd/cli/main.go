@@ -108,8 +108,9 @@ func main() {
 			height = xh
 		}
 
-		if output {
+		if output && len(fit) > 0 {
 			f, err := os.Create(fmt.Sprintf("%s.%d.svg", outname, inx))
+			defer f.Close()
 			if err != nil {
 				panic("cannot create file")
 			}
@@ -121,7 +122,7 @@ func main() {
 			s := svgStart(width, height, unit)
 			si, err := outsvg(fit)
 			if err != nil {
-				panic(err)
+				break
 			}
 			s += svgEnd(si)
 
@@ -159,12 +160,14 @@ func main() {
 			mperim += perim
 
 			stats += fmt.Sprintf(
-				"%d %s %.2f%sx%.2f%s fit %d used %.2f lost %.2f percent %.2f perim %.2f\n",
+				"%d %s %.2f%sx%.2f%s fit %d of %d unfit %d used %.2f lost %.2f percent %.2f perim %.2f\n",
 				inx,
 				outname,
 				width, unit,
 				height, unit,
 				len(fit),
+				len(dims),
+				len(dims)-len(fit),
 				used,
 				lost,
 				percent,
