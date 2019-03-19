@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	outname, unit, dimensions, bigbox string
-	report, output, tight             bool
-	mu, ml, pp, pd, cutwidth          float64
+	outname, unit, dimensions, bigbox       string
+	report, output, tight, expandtocutwidth bool
+	mu, ml, pp, pd, cutwidth                float64
 )
 
 func param() {
@@ -38,20 +38,32 @@ func main() {
 	param()
 
 	dimensions := flag.Args()
-	dims := dimString(dimensions)
+	// if the cut can eat half of its width along cutline
+	// we compensate expanding boxes with an entire cut width
+	dims := dimString(dimensions, cutwidth)
 
 	unfit := blocksArranged(dims)
 	fit := []*packy.Node{}
 
 	wh := strings.Split(bigbox, "x")
-	width, err := strconv.Atoi(wh[0])
+	width, err := strconv.ParseFloat(wh[0], 64)
 	if err != nil {
 		panic("can't get width")
 	}
-	height, err := strconv.Atoi(wh[1])
+	height, err := strconv.ParseFloat(wh[1], 64)
 	if err != nil {
 		panic("can't get height")
 	}
+
+	expand := 0.0
+	if expandtocutwidth {
+		expand = cutwidth / 2
+	}
+	// first row and first column will not have to be expanded with an entire cutwidth
+	// but with an expand as they will not need a cut - being already cut on external side
+	// we have to expand big box but later we will shrink big box with an expand
+	width += expand
+	height += expand
 
 	initialheight := height
 
@@ -97,7 +109,7 @@ func main() {
 		}
 
 		if tight {
-			height = xh
+			height = float64(xh)
 		}
 
 		if output {
@@ -106,9 +118,13 @@ func main() {
 				panic("cannot create file")
 			}
 
+			// revert big box to the original size
+			width -= expand
+			height -= expand
+
 			canvas = svg.New(f)
 			canvas.Startunit(width, height, unit, fmt.Sprintf("viewBox=\"0 0 %d %d\"", width, height))
-			outsvg(canvas, fit)
+			outsvg(canvas, fit, expand)
 			canvas.End()
 		}
 

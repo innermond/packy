@@ -15,11 +15,27 @@ func aproximateHeightText(numchar int, w int) string {
 	return fmt.Sprintf("%.2f", hchar)
 }
 
-func outsvg(canvas *svg.SVG, blocks []*packy.Node) error {
+func outsvg(canvas *svg.SVG, blocks []*packy.Node, expand float64) error {
 	canvas.Group("id=\"blocks\"", "inkscape:label=\"blocks\"", "inkscape:groupmode=\"layer\"")
 	for _, blk := range blocks {
 		if blk.Fit != nil {
-			canvas.Rect(blk.Fit.X, blk.Fit.Y, blk.W, blk.H, "fill:none;stroke-width:0.2;stroke-opacity:1;stroke:#000")
+			// first row and first column must be shrink by expand
+			prevx, prevy := 0, 0
+			if blk.Fit.Y != prevy || blk.Fit.X != prevx {
+				canvas.Rect(blk.Fit.X,
+					blk.Fit.Y,
+					blk.W-expand,
+					blk.H-expand,
+					"fill:none;stroke-width:0.2;stroke-opacity:1;stroke:#000")
+			} else {
+				canvas.Rect(blk.Fit.X-expand,
+					blk.Fit.Y-expand,
+					blk.W,
+					blk.H,
+					"fill:none;stroke-width:0.2;stroke-opacity:1;stroke:#000")
+
+			}
+			prevx, prevy = blk.Fit.X, blk.Fit.Y
 		} else {
 			return errors.New("unexpected unfit block")
 		}

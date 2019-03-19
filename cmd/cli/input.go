@@ -27,7 +27,7 @@ func blocksArranged(dims []dim) []*packy.Node {
 	return bb
 }
 
-func dimString(dimarr []string) (dims []dim) {
+func dimString(dimarr []string, extra float64) (dims []dim) {
 	for _, dd := range dimarr {
 		d := strings.Split(dd, "x")
 		if len(d) == 2 {
@@ -46,7 +46,7 @@ func dimString(dimarr []string) (dims []dim) {
 			panic(err)
 		}
 
-		dims = append(dims, dim{w: w, h: h, n: n})
+		dims = append(dims, dim{w: w + extra, h: h + extra, n: n})
 	}
 	return
 }
