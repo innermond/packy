@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	svg "github.com/ajstarks/svgo"
 	"github.com/innermond/cobai/packy/pkg/packy"
 )
 
@@ -21,7 +20,7 @@ var (
 func param() {
 	flag.StringVar(&outname, "o", "fit", "name of the maching project")
 	flag.StringVar(&unit, "u", "mm", "unit of measurements")
-	flag.StringVar(&bigbox, "b", "0x0", "dimensions as \"wxh\" in units for bigest box / mother surface")
+	flag.StringVar(&bigbox, "bb", "0x0", "dimensions as \"wxh\" in units for bigest box / mother surface")
 	flag.BoolVar(&report, "r", true, "match report")
 	flag.BoolVar(&output, "f", false, "outputing files representing matching")
 	flag.BoolVar(&tight, "tight", false, "when true only aria used is taken into account")
@@ -56,7 +55,7 @@ func main() {
 	}
 
 	expand := 0.0
-	if expandtocutwidth {
+	if cutwidth > 0.0 {
 		expand = cutwidth / 2
 	}
 	// first row and first column will not have to be expanded with an entire cutwidth
@@ -67,7 +66,6 @@ func main() {
 
 	initialheight := height
 
-	canvas := &svg.SVG{}
 	inx := 0
 	stats := ""
 	mpused := 0.0
@@ -81,16 +79,16 @@ func main() {
 		fit, unfit = packy.Pack(width, initialheight, unfit)
 
 		// How much the boxes are spreading on page. Are they dangerously approaching to edges
-		xh := 0
-		xw := 0
+		xh := 0.0
+		xw := 0.0
 		cwx, cwy := 0.0, 0.0
-		prevx, prevy := 0, 0
+		prevx, prevy := 0.0, 0.0
 		for _, blk := range fit {
 			if blk.Fit.Y != prevy {
-				cwx++
+				cwy++
 			}
 			if blk.Fit.X != prevx {
-				cwy++
+				cwx++
 			}
 			if xh < blk.Fit.Y+blk.H {
 				xh = blk.Fit.Y + blk.H
@@ -100,16 +98,18 @@ func main() {
 			}
 			prevx = blk.Fit.X
 			prevy = blk.Fit.Y
-			if cwx*cutwidth+float64(xw) >= float64(width) {
-				panic(fmt.Sprintf("for cut width %.2f big box width %d is not enough", cutwidth, width))
+			if cwx*cutwidth+xw >= width {
+				fmt.Printf("for cut width %.2f big box width %f is not enough", cutwidth, width)
+				continue
 			}
-			if cwy*cutwidth+float64(xh) >= float64(height) {
-				panic(fmt.Sprintf("for cut width %.2f big box height %d is not enough", cutwidth, height))
+			if cwy*cutwidth+xh >= height {
+				fmt.Printf("for cut width %.2f big box height %f is not enough", cutwidth, height)
+				continue
 			}
 		}
 
 		if tight {
-			height = float64(xh)
+			height = xh
 		}
 
 		if output {
@@ -122,20 +122,28 @@ func main() {
 			width -= expand
 			height -= expand
 
-			canvas = svg.New(f)
-			canvas.Startunit(width, height, unit, fmt.Sprintf("viewBox=\"0 0 %d %d\"", width, height))
-			outsvg(canvas, fit, expand)
-			canvas.End()
+			s := svgStart(width, height, unit)
+			si, err := outsvg(fit, expand)
+			if err != nil {
+				panic(err)
+			}
+			s += svgEnd(si)
+
+			_, err = f.WriteString(s)
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		if report {
-			aria, perim := 0, 0.0
+			// TODO: fit boxes here are expanded, fix it
+			aria, perim := 0.0, 0.0
 			for _, blk := range fit {
 				aria += blk.W * blk.H
-				perim += 2 * float64(blk.W+blk.H)
+				perim += 2 * (blk.W + blk.H)
 			}
 
-			percent := math.Round(100 * float64(aria) / float64(width*height))
+			percent := math.Round(100 * aria / (width * height))
 
 			k := 1.0
 			kp := 1.0
@@ -148,15 +156,15 @@ func main() {
 				kp = 100
 			}
 
-			used := float64(aria) / k
-			lost := float64(width*height)/k - used
+			used := aria / k
+			lost := (width*height)/k - used
 			perim = perim / kp
 			mplost += lost
 			mpused += used
 			mperim += perim
 
 			stats += fmt.Sprintf(
-				"%d %s %d%sx%d%s fit %d used %.2f lost %.2f percent %.2f perim %.2f\n",
+				"%d %s %.2f%sx%.2f%s fit %d used %.2f lost %.2f percent %.2f perim %.2f\n",
 				inx,
 				outname,
 				width, unit,

@@ -5,7 +5,8 @@ import (
 	"sort"
 )
 
-func Pack(width int, height int, blocks []*Node) (fit []*Node, unfit []*Node) {
+// Pack fits given blocks
+func Pack(width float64, height float64, blocks []*Node) (fit []*Node, unfit []*Node) {
 	packer := NewPacker(width, height)
 	packer.Fit(blocks)
 
@@ -21,6 +22,7 @@ func Pack(width int, height int, blocks []*Node) (fit []*Node, unfit []*Node) {
 	return
 }
 
+// Arrange sorts blocks bigest to smallest
 func Arrange(bb []*Node) {
 	if len(bb) == 0 {
 		return

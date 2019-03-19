@@ -5,54 +5,53 @@ import (
 	"fmt"
 	"math"
 
-	svg "github.com/ajstarks/svgo"
 	"github.com/innermond/cobai/packy/pkg/packy"
 )
 
-func aproximateHeightText(numchar int, w int) string {
-	wchar := float64(w) / float64(numchar+2)
+func aproximateHeightText(numchar int, w float64) string {
+	wchar := w / float64(numchar+2)
 	hchar := math.Floor(1.5*wchar*100.0) / 100
 	return fmt.Sprintf("%.2f", hchar)
 }
 
-func outsvg(canvas *svg.SVG, blocks []*packy.Node, expand float64) error {
-	canvas.Group("id=\"blocks\"", "inkscape:label=\"blocks\"", "inkscape:groupmode=\"layer\"")
+func outsvg(blocks []*packy.Node, expand float64) (string, error) {
+	gb := svgGroupStart("id=\"blocks\"", "inkscape:label=\"blocks\"", "inkscape:groupmode=\"layer\"")
 	for _, blk := range blocks {
 		if blk.Fit != nil {
 			// first row and first column must be shrink by expand
-			prevx, prevy := 0, 0
+			prevx, prevy := 0.0, 0.0
 			if blk.Fit.Y != prevy || blk.Fit.X != prevx {
-				canvas.Rect(blk.Fit.X,
+				gb += svgRect(blk.Fit.X-expand,
 					blk.Fit.Y,
 					blk.W-expand,
 					blk.H-expand,
-					"fill:none;stroke-width:0.2;stroke-opacity:1;stroke:#000")
+					"fill:none;stroke-width:0.2;stroke-opacity:1;stroke:green")
 			} else {
-				canvas.Rect(blk.Fit.X-expand,
-					blk.Fit.Y-expand,
-					blk.W,
-					blk.H,
-					"fill:none;stroke-width:0.2;stroke-opacity:1;stroke:#000")
+				gb += svgRect(blk.Fit.X,
+					blk.Fit.Y,
+					blk.W-expand,
+					blk.H-expand,
+					"fill:none;stroke-width:0.2;stroke-opacity:1;stroke:red")
 
 			}
 			prevx, prevy = blk.Fit.X, blk.Fit.Y
 		} else {
-			return errors.New("unexpected unfit block")
+			return "", errors.New("unexpected unfit block")
 		}
 	}
-	canvas.Gend()
+	gb = svgGroupEnd(gb)
 
-	canvas.Group("id=\"dimensions\"", "inkscape:label=\"dimensions\"", "inkscape:groupmode=\"layer\"")
+	gt := svgGroupStart("id=\"dimensions\"", "inkscape:label=\"dimensions\"", "inkscape:groupmode=\"layer\"")
 	for _, blk := range blocks {
 		if blk.Fit != nil {
-			x := fmt.Sprintf("%dx%d", blk.W, blk.H)
-			canvas.Text(blk.Fit.X+blk.W/2, blk.Fit.Y+blk.H/2,
+			x := fmt.Sprintf("%.2fx%.2f", blk.W, blk.H)
+			gt += svgText(blk.Fit.X+blk.W/2, blk.Fit.Y+blk.H/2,
 				x, "text-anchor:middle;font-size:"+aproximateHeightText(len(x), blk.W)+";fill:#000")
 		} else {
-			return errors.New("unexpected unfit block")
+			return "", errors.New("unexpected unfit block")
 		}
 	}
-	canvas.Gend()
+	gt = svgGroupEnd(gt)
 
-	return nil
+	return gb + gt, nil
 }

@@ -1,14 +1,17 @@
 package packy
 
+// GrowingPacker is an elastic packer
 type GrowingPacker struct {
 	root *Node
 }
 
+// Fit fits the blocks
 func (gp *GrowingPacker) Fit(blocks []*Node) {
 	var (
-		w, h, n int
-		l       int = len(blocks)
-		block   *Node
+		w, h  float64
+		n     int
+		l     = len(blocks)
+		block *Node
 	)
 
 	if l > 0 {
@@ -32,7 +35,7 @@ func (gp *GrowingPacker) Fit(blocks []*Node) {
 	}
 }
 
-func (gp *GrowingPacker) findNode(root *Node, w, h int) *Node {
+func (gp *GrowingPacker) findNode(root *Node, w, h float64) *Node {
 	var node *Node
 	if root.used {
 		node = gp.findNode(root.right, w, h)
@@ -46,7 +49,7 @@ func (gp *GrowingPacker) findNode(root *Node, w, h int) *Node {
 	return node
 }
 
-func (gp *GrowingPacker) splitNode(node *Node, w, h int) *Node {
+func (gp *GrowingPacker) splitNode(node *Node, w, h float64) *Node {
 	node.used = true
 	node.down = &Node{X: node.X, Y: node.Y + h, W: node.W, H: node.H - h}
 	node.right = &Node{X: node.X + w, Y: node.Y, W: node.W - w, H: h}
@@ -54,7 +57,7 @@ func (gp *GrowingPacker) splitNode(node *Node, w, h int) *Node {
 	return node
 }
 
-func (gp *GrowingPacker) growNode(w, h int) *Node {
+func (gp *GrowingPacker) growNode(w, h float64) *Node {
 	canGrowDown := w <= gp.root.W
 	canGrowRight := h <= gp.root.H
 
@@ -73,7 +76,7 @@ func (gp *GrowingPacker) growNode(w, h int) *Node {
 	return nil // need to ensure sensible root starting size to avoid this happening
 }
 
-func (gp GrowingPacker) growRight(w, h int) *Node {
+func (gp GrowingPacker) growRight(w, h float64) *Node {
 	gp.root = &Node{
 		used:  true,
 		X:     0,
@@ -90,7 +93,7 @@ func (gp GrowingPacker) growRight(w, h int) *Node {
 	return nil
 }
 
-func (gp GrowingPacker) growDown(w, h int) *Node {
+func (gp GrowingPacker) growDown(w, h float64) *Node {
 	gp.root = &Node{
 		used:  true,
 		X:     0,
