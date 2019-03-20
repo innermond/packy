@@ -23,9 +23,19 @@ func Pack(width float64, height float64, blocks []*Node) (fit []*Node, unfit []*
 }
 
 // PackExpand adjust blocks dimensions in porder to compensate for cut width
-func PackExpand(width float64, height float64, blocks []*Node, expand float64) (fit []*Node, unfit []*Node) {
+func PackExpand(width float64, height float64, blocks []*Node, expand float64, topleftmargin float64) (fit []*Node, unfit []*Node) {
 	fit, unfit = Pack(width, height, blocks)
-	if fit == nil || len(fit) == 0 {
+	if len(fit) == 0 {
+		return fit, unfit
+	}
+
+	if topleftmargin > 0.0 {
+		for _, blk := range fit {
+			if blk.Fit != nil {
+				blk.Fit.X += topleftmargin
+				blk.Fit.Y += topleftmargin
+			}
+		}
 		return fit, unfit
 	}
 

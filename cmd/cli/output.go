@@ -13,8 +13,8 @@ func aproximateHeightText(numchar int, w float64) float64 {
 	return math.Floor(1.5*wchar*100.0) / 100
 }
 
-func outsvg(blocks []*packy.Node) (string, error) {
-	if len(blocks) == 0 || blocks == nil {
+func outsvg(blocks []*packy.Node, topleftmargin float64) (string, error) {
+	if len(blocks) == 0 {
 		return "", errors.New("no blocks")
 	}
 
@@ -22,8 +22,8 @@ func outsvg(blocks []*packy.Node) (string, error) {
 
 	// first block
 	blk := blocks[0]
-	gb += svgRect(0.0,
-		0.0,
+	gb += svgRect(blk.Fit.X,
+		blk.Fit.Y,
 		blk.W,
 		blk.H,
 		"fill:magenta;stroke:none",
@@ -32,9 +32,9 @@ func outsvg(blocks []*packy.Node) (string, error) {
 	for _, blk := range blocks[1:] {
 		if blk.Fit != nil {
 			// blocks on the top edge must be shortened on height by a expand = half cutwidth
-			if blk.Fit.Y == 0.0 {
+			if blk.Fit.Y == topleftmargin {
 				gb += svgRect(blk.Fit.X,
-					0.0,
+					blk.Fit.Y,
 					blk.W,
 					blk.H,
 					"fill:red;stroke:none",
@@ -42,8 +42,8 @@ func outsvg(blocks []*packy.Node) (string, error) {
 				continue
 			}
 			// blocks on the left edge must be shortened on width by a expand = half cutwidth
-			if blk.Fit.X == 0.0 {
-				gb += svgRect(0.0,
+			if blk.Fit.X == topleftmargin {
+				gb += svgRect(blk.Fit.X,
 					blk.Fit.Y,
 					blk.W,
 					blk.H,

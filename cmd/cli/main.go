@@ -14,7 +14,7 @@ import (
 var (
 	outname, unit, dimensions, bigbox                   string
 	report, output, tight, supertight, expandtocutwidth bool
-	mu, ml, pp, pd, cutwidth                            float64
+	mu, ml, pp, pd, cutwidth, topleftmargin             float64
 )
 
 func param() {
@@ -30,6 +30,7 @@ func param() {
 	flag.Float64Var(&pp, "pp", 0.25, "perimeter price per 1 linear meter; used for evaluating cuts price")
 	flag.Float64Var(&pd, "pd", 10, "travel price to location")
 	flag.Float64Var(&cutwidth, "cutwidth", 0.0, "the with of material that is lost due to a cut")
+	flag.Float64Var(&topleftmargin, "margin", 0.0, "offset from top left margin")
 
 	flag.Parse()
 }
@@ -66,8 +67,8 @@ func main() {
 	// first row and first column will not have to be expanded with an entire cutwidth
 	// but with an expand as they will not need a cut - being already cut on external side
 	// we have to expand big box but later we will shrink big box with an expand
-	width += expand
-	height += expand
+	width += expand - 2*topleftmargin
+	height += expand - 2*topleftmargin
 
 	initialheight := height
 
@@ -81,9 +82,9 @@ func main() {
 	for unfitlen > 0 {
 		inx++
 		// Presumably unfit are already expanded
-		fit, unfit = packy.PackExpand(width, initialheight, unfit, expand)
+		fit, unfit = packy.PackExpand(width, initialheight, unfit, expand, topleftmargin)
 
-		if len(fit) == 0 {
+		if len(fit) == 0 || unfitlen == len(unfit) {
 			break
 		}
 
@@ -91,7 +92,7 @@ func main() {
 		xh := 0.0
 		xw := 0.0
 		cwx, cwy := 0.0, 0.0
-		prevx, prevy := 0.0, 0.0
+		prevx, prevy := topleftmargin, topleftmargin
 		for _, blk := range fit {
 			if blk.Fit.Y != prevy {
 				cwy++
@@ -126,11 +127,11 @@ func main() {
 			}
 
 			// revert big box to the original size
-			width -= expand
-			height -= expand
+			width -= expand - 2*topleftmargin
+			height -= expand - 2*topleftmargin
 
 			s := svgStart(width, height, unit)
-			si, err := outsvg(fit)
+			si, err := outsvg(fit, topleftmargin)
 			if err != nil {
 				f.Close()
 				os.Remove(fn)
@@ -188,9 +189,6 @@ func main() {
 			)
 		}
 
-		if unfitlen == len(unfit) {
-			break
-		}
 		unfitlen = len(unfit)
 	}
 
