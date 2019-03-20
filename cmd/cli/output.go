@@ -13,13 +13,15 @@ func aproximateHeightText(numchar int, w float64) float64 {
 	return math.Floor(1.5*wchar*100.0) / 100
 }
 
-func outsvg(blocks []*packy.Node, topleftmargin float64) (string, error) {
+func outsvg(blocks []*packy.Node, topleftmargin float64, plain bool) (string, error) {
 	if len(blocks) == 0 {
 		return "", errors.New("no blocks")
 	}
 
-	gb := svgGroupStart("id=\"blocks\"", "inkscape:label=\"blocks\"", "inkscape:groupmode=\"layer\"")
-
+	gb := svgGroupStart("id=\"blocks\"")
+	if !plain {
+		gb = svgGroupStart("id=\"blocks\"", "inkscape:label=\"blocks\"", "inkscape:groupmode=\"layer\"")
+	}
 	// first block
 	blk := blocks[0]
 	gb += svgRect(blk.Fit.X,
@@ -64,7 +66,10 @@ func outsvg(blocks []*packy.Node, topleftmargin float64) (string, error) {
 	}
 	gb = svgGroupEnd(gb)
 
-	gt := svgGroupStart("id=\"dimensions\"", "inkscape:label=\"dimensions\"", "inkscape:groupmode=\"layer\"")
+	gt := svgGroupStart("id=\"dimensions\"")
+	if !plain {
+		gt = svgGroupStart("id=\"dimensions\"", "inkscape:label=\"dimensions\"", "inkscape:groupmode=\"layer\"")
+	}
 	for _, blk := range blocks {
 		if blk.Fit != nil {
 			x := fmt.Sprintf("%.2fx%.2f", blk.W, blk.H)

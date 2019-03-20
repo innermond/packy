@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	outname, unit, dimensions, bigbox                   string
-	report, output, tight, supertight, expandtocutwidth bool
-	mu, ml, pp, pd, cutwidth, topleftmargin             float64
+	outname, unit, dimensions, bigbox                          string
+	report, output, tight, supertight, expandtocutwidth, plain bool
+	mu, ml, pp, pd, cutwidth, topleftmargin                    float64
 )
 
 func param() {
@@ -25,6 +25,7 @@ func param() {
 	flag.BoolVar(&output, "f", false, "outputing files representing matching")
 	flag.BoolVar(&tight, "tight", false, "when true only aria used tighten by height is taken into account")
 	flag.BoolVar(&supertight, "supertight", false, "when true only aria used tighten bu height and width is taken into account")
+	flag.BoolVar(&plain, "plain", true, "when false will save svg as inkscape svg")
 	flag.Float64Var(&mu, "mu", 15.0, "used material price per 1 square meter")
 	flag.Float64Var(&ml, "ml", 5.0, "lost material price per 1 square meter")
 	flag.Float64Var(&pp, "pp", 0.25, "perimeter price per 1 linear meter; used for evaluating cuts price")
@@ -64,11 +65,17 @@ func main() {
 	if cutwidth > 0.0 {
 		expand = cutwidth / 2
 	}
+
+	expandpage := expand
+	// when margin exists forget expand page
+	if topleftmargin > 0.0 {
+		expandpage = 0.0
+	}
 	// first row and first column will not have to be expanded with an entire cutwidth
 	// but with an expand as they will not need a cut - being already cut on external side
 	// we have to expand big box but later we will shrink big box with an expand
-	width += expand - 2*topleftmargin
-	height += expand - 2*topleftmargin
+	width = width + expandpage - 2*topleftmargin
+	height = height + expandpage - 2*topleftmargin
 
 	initialheight := height
 
@@ -127,11 +134,11 @@ func main() {
 			}
 
 			// revert big box to the original size
-			width -= expand - 2*topleftmargin
-			height -= expand - 2*topleftmargin
+			width = width - expandpage + 2*topleftmargin
+			height = height - expandpage + 2*topleftmargin
 
 			s := svgStart(width, height, unit)
-			si, err := outsvg(fit, topleftmargin)
+			si, err := outsvg(fit, topleftmargin, plain)
 			if err != nil {
 				f.Close()
 				os.Remove(fn)
