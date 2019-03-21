@@ -25,7 +25,7 @@ func param() {
 	flag.BoolVar(&output, "f", false, "outputing files representing matching")
 	flag.BoolVar(&tight, "tight", false, "when true only aria used tighten by height is taken into account")
 	flag.BoolVar(&supertight, "supertight", false, "when true only aria used tighten bu height and width is taken into account")
-	flag.BoolVar(&plain, "plain", true, "when false will save svg as inkscape svg")
+	flag.BoolVar(&plain, "inkscape", true, "when false will save svg as inkscape svg")
 	flag.Float64Var(&mu, "mu", 15.0, "used material price per 1 square meter")
 	flag.Float64Var(&ml, "ml", 5.0, "lost material price per 1 square meter")
 	flag.Float64Var(&pp, "pp", 0.25, "perimeter price per 1 linear meter; used for evaluating cuts price")
@@ -34,6 +34,13 @@ func param() {
 	flag.Float64Var(&topleftmargin, "margin", 0.0, "offset from top left margin")
 
 	flag.Parse()
+
+	// when inkscape flag is set plain is false'd
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "inkscape" {
+			plain = false
+		}
+	})
 }
 
 func main() {
