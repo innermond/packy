@@ -35,10 +35,14 @@ func param() {
 
 	flag.Parse()
 
-	// when inkscape flag is set plain is false'd
 	flag.Visit(func(f *flag.Flag) {
-		if f.Name == "inkscape" {
+		switch f.Name {
+		case "inkscape":
 			plain = false
+		case "tight":
+			tight = true
+		case "supertight":
+			supertight = true
 		}
 	})
 }
@@ -56,7 +60,6 @@ func main() {
 	}
 
 	unfit := blocksArranged(dims)
-	fit := []*packy.Node{}
 
 	wh := strings.Split(bigbox, "x")
 	width, err := strconv.ParseFloat(wh[0], 64)
@@ -68,69 +71,25 @@ func main() {
 		panic("can't get height")
 	}
 
-	expand := 0.0
-	if cutwidth > 0.0 {
-		expand = cutwidth / 2
-	}
+	op := packy.NewOperation(width, height, cutwidth, topleftmargin)
+	reportdata := op.Pack(unfit)
 
-	expandpage := expand
-	// when margin exists forget expand page
-	if topleftmargin > 0.0 {
-		expandpage = 0.0
-	}
-	// first row and first column will not have to be expanded with an entire cutwidth
-	// but with an expand as they will not need a cut - being already cut on external side
-	// we have to expand big box but later we will shrink big box with an expand
-	width = width + expandpage - 2*topleftmargin
-	height = height + expandpage - 2*topleftmargin
-
-	initialheight := height
-
-	inx := 0
 	stats := ""
 	mpused := 0.0
 	mplost := 0.0
 	mperim := 0.0
 	unfitlen := len(unfit)
 
-	for unfitlen > 0 {
-		inx++
-		// Presumably unfit are already expanded
-		fit, unfit = packy.PackExpand(width, initialheight, unfit, expand, topleftmargin)
+	for inx, rd := range reportdata {
 
-		if len(fit) == 0 || unfitlen == len(unfit) {
-			break
-		}
-
-		// calculate calculate de maximum height and width that fit blocks have
-		xh := 0.0
-		xw := 0.0
-		cwx, cwy := 0.0, 0.0
-		prevx, prevy := topleftmargin, topleftmargin
-		for _, blk := range fit {
-			if blk.Fit.Y != prevy {
-				cwy++
-			}
-			if blk.Fit.X != prevx {
-				cwx++
-			}
-			if xh < blk.Fit.Y+blk.H {
-				xh = blk.Fit.Y + blk.H
-			}
-			if xw < blk.Fit.X+blk.W {
-				xw = blk.Fit.X + blk.W
-			}
-			prevx = blk.Fit.X
-			prevy = blk.Fit.Y
-		}
+		fit := rd.Fit
 
 		if supertight {
-			height = xh
-			width = xw
+			height = rd.HeightUsed
+			width = rd.WidthUsed
 		} else if tight {
-			height = xh
+			height = rd.HeightUsed
 		}
-
 		// output only when we have fit blocks
 		if output {
 			fn := fmt.Sprintf("%s.%d.svg", outname, inx)
@@ -139,10 +98,6 @@ func main() {
 			if err != nil {
 				panic("cannot create file")
 			}
-
-			// revert big box to the original size
-			width = width - expandpage + 2*topleftmargin
-			height = height - expandpage + 2*topleftmargin
 
 			s := svgStart(width, height, unit)
 			si, err := outsvg(fit, topleftmargin, plain)
@@ -161,12 +116,7 @@ func main() {
 		}
 
 		if report {
-			aria, perim := 0.0, 0.0
-			for _, blk := range fit {
-				aria += blk.W * blk.H
-				perim += 2 * (blk.W + blk.H)
-			}
-
+			aria, perim := rd.Aria, rd.Perimeter
 			percent := math.Round(100 * aria / (width * height))
 
 			k := 1.0
@@ -202,8 +152,6 @@ func main() {
 				perim,
 			)
 		}
-
-		unfitlen = len(unfit)
 	}
 
 	if report {
