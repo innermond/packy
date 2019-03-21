@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -12,7 +11,7 @@ import (
 )
 
 var (
-	outname, unit, dimensions, bigbox                          string
+	outname, unit, dimensions, bigbox, modeReportAria          string
 	report, output, tight, supertight, expandtocutwidth, plain bool
 	mu, ml, pp, pd, cutwidth, topleftmargin                    float64
 )
@@ -41,8 +40,10 @@ func param() {
 			plain = false
 		case "tight":
 			tight = true
+			modeReportAria = "tight"
 		case "supertight":
 			supertight = true
+			modeReportAria = "supertight"
 		}
 	})
 }
@@ -82,17 +83,16 @@ func main() {
 
 	for inx, pkd := range packdata {
 
-		fit := pkd.Fit
-
-		if supertight {
-			height = pkd.HeightUsed
-			width = pkd.WidthUsed
-		} else if tight {
-			height = pkd.HeightUsed
-		}
 		// output only when we have fit blocks
 		if output {
-			fn := fmt.Sprintf("%s.%d.svg", outname, inx)
+			if supertight {
+				height = pkd.HeightUsed + op.TopLeftMargin
+				width = pkd.WidthUsed + op.TopLeftMargin
+			} else if tight {
+				height = pkd.HeightUsed + op.TopLeftMargin
+			}
+
+			fn := fmt.Sprintf("%s.%d.svg", outname, inx+1)
 
 			f, err := os.Create(fn)
 			if err != nil {
@@ -100,7 +100,7 @@ func main() {
 			}
 
 			s := svgStart(width, height, unit)
-			si, err := outsvg(fit, topleftmargin, plain)
+			si, err := outsvg(pkd.Fit, topleftmargin, plain)
 			if err != nil {
 				f.Close()
 				os.Remove(fn)
@@ -116,36 +116,34 @@ func main() {
 		}
 
 		if report {
-			aria, perim := pkd.Aria, pkd.Perimeter
-			percent := math.Round(100 * aria / (width * height))
-
 			k := 1.0
-			kp := 1.0
 			switch unit {
 			case "mm":
-				k = 1000 * 1000
-				kp = 1000
+				k = 1000
 			case "cm":
-				k = 100 * 100
-				kp = 100
+				k = 100
 			}
 
-			used := aria / k
-			lost := (width*height)/k - used
-			perim = perim / kp
+			stat := op.ReportOne(pkd, k, modeReportAria)
+
+			used := stat[0]
+			lost := stat[1]
+			percent := stat[2]
+			perim := stat[3]
+
 			mplost += lost
 			mpused += used
 			mperim += perim
 
 			stats += fmt.Sprintf(
 				"%d %s %.2f%sx%.2f%s fit %d of %d unfit %d used %.2f lost %.2f percent %.2f perim %.2f\n",
-				inx,
+				inx+1,
 				outname,
-				width, unit,
-				height, unit,
-				len(fit),
+				op.Width, unit,
+				op.Height, unit,
+				len(pkd.Fit),
 				unfitlen,
-				unfitlen-len(fit),
+				unfitlen-len(pkd.Fit),
 				used,
 				lost,
 				percent,
@@ -156,6 +154,7 @@ func main() {
 
 	if report {
 		price := mpused*mu + mplost*ml + mperim*pp + pd
+		stats += strings.Repeat("-", 80) + "\n"
 		stats += fmt.Sprintf("used %.2f lost %.2f total %.2f perim %.2f price %.2f\n", mpused, mplost, mpused+mplost, mperim, price)
 		fmt.Print(stats)
 	}

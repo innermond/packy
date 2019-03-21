@@ -1,5 +1,9 @@
 package packy
 
+import (
+	"math"
+)
+
 // Operation holds context for boxes matching operation
 type Operation struct {
 	Width         float64
@@ -96,6 +100,25 @@ func (o *Operation) Pack(unfit []*Node) (report []*Report) {
 	o.Unexpand()
 
 	return
+}
+
+// ReportOne prepare data for one big box used for fitting
+// k is a unit to unit conversion - 1000 mm -> m
+func (o *Operation) ReportOne(pkd *Report, k float64, modeReportAria string) []float64 {
+	width, height := o.Width/k, o.Height/k
+	switch modeReportAria {
+	case "tight":
+		height = pkd.HeightUsed / k
+	case "supertight":
+		height = pkd.HeightUsed / k
+		width = pkd.WidthUsed / k
+	}
+	aria, perim := pkd.Aria/(k*k), pkd.Perimeter/k
+
+	lost := width*height - aria
+	percent := math.Round(100 * aria / (width * height))
+
+	return []float64{aria, lost, percent, perim}
 }
 
 // Report has data needed for stats
