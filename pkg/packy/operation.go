@@ -40,6 +40,7 @@ func (o *Operation) Pack(unfit []*Node) (report []*Report) {
 	expand := o.Cutwidth
 
 	o.Expand()
+	Arrange(unfit)
 
 	var fit []*Node
 

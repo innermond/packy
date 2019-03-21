@@ -21,12 +21,6 @@ func blocksfrom(dims []dim) (blocks []*packy.Node) {
 	return
 }
 
-func blocksArranged(dims []dim) []*packy.Node {
-	bb := blocksfrom(dims)
-	packy.Arrange(bb)
-	return bb
-}
-
 func dimString(dimarr []string, extra float64) (dims []dim) {
 	for _, dd := range dimarr {
 		d := strings.Split(dd, "x")

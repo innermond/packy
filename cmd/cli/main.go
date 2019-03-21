@@ -59,7 +59,7 @@ func main() {
 		lendims += dim.n
 	}
 
-	unfit := blocksArranged(dims)
+	unfit := blocksfrom(dims)
 
 	wh := strings.Split(bigbox, "x")
 	width, err := strconv.ParseFloat(wh[0], 64)
@@ -72,7 +72,7 @@ func main() {
 	}
 
 	op := packy.NewOperation(width, height, cutwidth, topleftmargin)
-	reportdata := op.Pack(unfit)
+	packdata := op.Pack(unfit)
 
 	stats := ""
 	mpused := 0.0
@@ -80,15 +80,15 @@ func main() {
 	mperim := 0.0
 	unfitlen := len(unfit)
 
-	for inx, rd := range reportdata {
+	for inx, pkd := range packdata {
 
-		fit := rd.Fit
+		fit := pkd.Fit
 
 		if supertight {
-			height = rd.HeightUsed
-			width = rd.WidthUsed
+			height = pkd.HeightUsed
+			width = pkd.WidthUsed
 		} else if tight {
-			height = rd.HeightUsed
+			height = pkd.HeightUsed
 		}
 		// output only when we have fit blocks
 		if output {
@@ -116,7 +116,7 @@ func main() {
 		}
 
 		if report {
-			aria, perim := rd.Aria, rd.Perimeter
+			aria, perim := pkd.Aria, pkd.Perimeter
 			percent := math.Round(100 * aria / (width * height))
 
 			k := 1.0
