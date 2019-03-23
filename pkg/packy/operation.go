@@ -121,6 +121,26 @@ func (o *Operation) ReportOne(pkd *Report, k float64, modeReportAria string) []f
 	return []float64{aria, lost, percent, perim}
 }
 
+// Rolls all permutations of dimensions by switching W and H
+func Rolls(b []Dim) (bb [][]Dim) {
+	for i, x := range b {
+		a := Dim{x.W, x.H, 1}
+		// reverse of a
+		z := Dim{x.H, x.W, 1}
+		// permutations here
+		perm := []Dim{a, z}
+		xx := make([]Dim, len(b))
+		copy(xx, b)
+		// extract index i
+		for _, n := range perm {
+			// add n in position i
+			p := append(xx[:i], append([]Dim{n}, xx[i:]...)...)
+			bb = append(bb, p)
+		}
+	}
+	return bb
+}
+
 // Report has data needed for stats
 type Report struct {
 	WidthUsed  float64

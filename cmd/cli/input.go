@@ -7,21 +7,7 @@ import (
 	"github.com/innermond/cobai/packy/pkg/packy"
 )
 
-type dim struct {
-	w, h float64
-	n    int
-}
-
-func blocksfrom(dims []dim) (blocks []*packy.Node) {
-	for inx := 0; inx < len(dims); inx++ {
-		for i := 0; i < dims[inx].n; i++ {
-			blocks = append(blocks, &packy.Node{W: dims[inx].w, H: dims[inx].h})
-		}
-	}
-	return
-}
-
-func dimString(dimarr []string, extra float64) (dims []dim) {
+func dimString(dimarr []string, extra float64) (dims []packy.Dim) {
 	for _, dd := range dimarr {
 		d := strings.Split(dd, "x")
 		if len(d) == 2 {
@@ -40,7 +26,7 @@ func dimString(dimarr []string, extra float64) (dims []dim) {
 			panic(err)
 		}
 
-		dims = append(dims, dim{w: w + extra, h: h + extra, n: n})
+		dims = append(dims, packy.Dim{W: w + extra, H: h + extra, N: n})
 	}
 	return
 }

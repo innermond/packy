@@ -80,27 +80,31 @@ func Arrange(bb []*Node) {
 	sort.Slice(bb, func(i, j int) bool {
 		a := bb[i]
 		b := bb[j]
-		aw := float64(a.W)
-		ah := float64(a.H)
-		bw := float64(b.W)
-		bh := float64(b.H)
+		aw := a.W
+		ah := a.H
+		bw := b.W
+		bh := b.H
 
-		if math.Max(bw, bh) <= math.Max(aw, ah) {
-			return true
+		if aw <= bw {
+			return false
 		}
 
-		if math.Min(bw, bh) <= math.Min(aw, ah) {
-			return true
+		if aw*ah <= bw*bh {
+			return false
 		}
 
-		if bh <= ah {
-			return true
+		if math.Min(aw, ah) <= math.Min(bw, bh) {
+			return false
 		}
 
-		if bw <= aw {
-			return true
-		}
+		// if math.Max(aw, ah) <= math.Max(bw, bh) {
+		// 	return false
+		// }
 
-		return false
+		// if ah <= bh {
+		// 	return false
+		// }
+
+		return true
 	})
 }

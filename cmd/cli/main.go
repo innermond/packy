@@ -57,10 +57,10 @@ func main() {
 	dims := dimString(dimensions, cutwidth)
 	lendims := 0
 	for _, dim := range dims {
-		lendims += dim.n
+		lendims += dim.N
 	}
 
-	unfit := blocksfrom(dims)
+	unfit := packy.DimNode(dims)
 
 	wh := strings.Split(bigbox, "x")
 	width, err := strconv.ParseFloat(wh[0], 64)
