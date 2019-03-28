@@ -1,7 +1,6 @@
 package packy
 
 import (
-	"math"
 	"sort"
 )
 
@@ -80,28 +79,35 @@ func Arrange(bb []*Node) {
 	sort.Slice(bb, func(i, j int) bool {
 		a := bb[i]
 		b := bb[j]
-		aw := a.W
+		// aw := a.W
 		ah := a.H
-		bw := b.W
+		// bw := b.W
 		bh := b.H
 
-		if aw <= bw {
+		if ah <= bh {
 			return false
 		}
 
-		if aw*ah <= bw*bh {
-			return false
-		}
+		// sort boxes about ratio
+		// rr := (aw / ah) / (bw / bh)
+		// if rr < 1.1 && rr > 0.9 {
+		// 	return false
+		// }
 
-		if math.Min(aw, ah) <= math.Min(bw, bh) {
-			return false
-		}
+		// then about aria
+		// if aw*ah <= bw*bh {
+		// 	return false
+		// }
+
+		// if math.Min(aw, ah) <= math.Min(bw, bh) {
+		// 	return false
+		// }
 
 		// if math.Max(aw, ah) <= math.Max(bw, bh) {
 		// 	return false
 		// }
 
-		// if ah <= bh {
+		// if aw <= bw {
 		// 	return false
 		// }
 
